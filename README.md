@@ -1,0 +1,1 @@
+This is a Native React chat app that will allow users to join a chat with their own username and background color, send normal text asd well as images and location data, with offline and online data storage.
