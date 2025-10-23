@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity, ImageBackground } from 'react-native';
+import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
 
 const Screen1 = ({ navigation }) => {
   // Created states for name and background color between pages.
@@ -7,20 +7,23 @@ const Screen1 = ({ navigation }) => {
   const [bgColor, setBgColor] = useState('#b0c4de');
 
   return (
-      <View style={[styles.container, {backgroundColor: bgColor}]}>
-        <Text>Hello Screen1!</Text>
-        <TextInput
+    <KeyboardAvoidingView //Use KeyboardAvoidingView so keyboard won't cover the color buttons
+      style={[styles.container, {backgroundColor: bgColor}]}
+      behavior={Platform.OS === "ios" ? 'padding': 'height'}
+    >
+      <Text>Hello Screen1!</Text>
+      <TextInput
           style={styles.textInput}
           value={name}
           onChangeText={setName}
           placeholder='Type your username here'
-        />
-        <Button
-          title="Start Chatting"
-          // Passing both name and bgcolor to next screen.
-          onPress={() => navigation.navigate('Screen2', {name: name, bgColor: bgColor})}
-        />
-        <Text>Choose a background color:</Text>
+      />
+      <Button
+        title="Start Chatting"
+        // Passing both name and bgcolor to next screen.
+        onPress={() => navigation.navigate('Screen2', {name: name, bgColor: bgColor})}
+      />
+      <Text>Choose a background color:</Text>
         {/* Buttons that will allow user to change background color. */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity 
@@ -38,8 +41,8 @@ const Screen1 = ({ navigation }) => {
           <TouchableOpacity
             style={[styles.colorButton, {backgroundColor: '#b0c4de'}]}
             onPress={() => setBgColor('#b0c4de')}/>
-          </View>
-      </View>
+        </View>
+    </KeyboardAvoidingView>
   );
 }
 
