@@ -1,10 +1,41 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, View, Text, Button, TextInput, TouchableOpacity, ImageBackground, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { getAuth, signInAnonymously } from "firebase/auth";
 
 const Screen1 = ({ navigation }) => {
   // Created states for name and background color between pages.
   const [name, setName] = useState('');
   const [bgColor, setBgColor] = useState('#b0c4de');
+
+  const auth = getAuth();
+
+  const signInUser = () => {
+    const user = auth.currentUser;
+
+    //Navigates straight to chat if user is already logged in, passing their chosen Name and background color
+    if (user) {
+      navigation.navigate("Screen2", {
+        userID: user.uid,
+        name: name,
+        bgColor: bgColor,
+      });
+      return
+    }
+
+    //Logs in user
+    signInAnonymously(auth)
+      .then(result => {
+        navigation.navigate("Screen2", {
+          userID: result.user.uid,
+          name: name,
+          bgColor: bgColor,
+        });
+        Alert.alert("Signed in successfully!");
+      })
+      .catch((error) => {
+        Alert.alert("unable to sign in, try again later.");
+      })
+  };
 
   return (
     <KeyboardAvoidingView //Use KeyboardAvoidingView so keyboard won't cover the color buttons
@@ -21,7 +52,7 @@ const Screen1 = ({ navigation }) => {
       <Button
         title="Start Chatting"
         // Passing both name and bgcolor to next screen.
-        onPress={() => navigation.navigate('Screen2', {name: name, bgColor: bgColor})}
+        onPress={signInUser}
       />
       <Text>Choose a background color:</Text>
         {/* Buttons that will allow user to change background color. */}
@@ -57,8 +88,8 @@ const styles = StyleSheet.create({
     width: "88%",
     padding: 15,
     borderWidth: 1,
-    MarginTop: 15,
-    MarginBottom: 15,
+    marginTop: 15,
+    marginBottom: 15,
     backgroundColor: 'white'
   },
   buttonContainer: {
