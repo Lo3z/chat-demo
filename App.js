@@ -2,12 +2,21 @@
 import Screen1 from './components/Screen1';
 import Screen2 from './components/Screen2';
 
+// React imports
+import { useEffect, useState } from "react";
+import { LogBox, Alert } from "react-native";
+
+// Navigation imports
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Firebase imports
 import { initializeApp } from "firebase/app"
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, disableNetwork, enableNetwork } from "firebase/firestore";
+
+// AsyncStorage/NetInfo imports
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNetInfo }from '@react-native-community/netinfo';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -25,9 +34,23 @@ const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
+// Initialize stack navigation
 const Stack = createNativeStackNavigator();
 
+// Initialize network connectivity state
 const App = () => {
+  const connectionStatus = useNetInfo();
+
+  // UseEffect state to check network connection
+  useEffect(() => {
+    if (connectionStatus.isConnected === false) {
+      Alert.alert ("Connection lost.");
+      disableNetwork(db);
+    } else if (connectionStatus.isConnected === true) {
+      enableNetwork(db);
+    }
+  }, [connectionStatus.isConnected]);
+
   return (
     <NavigationContainer>
       {/* App will launch to this screen */}
@@ -41,11 +64,11 @@ const App = () => {
         <Stack.Screen
           name="Screen2"
         >
-          {props => <Screen2 db={db} {...props}/>}
+          {props => <Screen2 isConnected={connectionStatus.isConnected} db={db} {...props}/>}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
 
 export default App;

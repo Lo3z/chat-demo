@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
-import { Bubble, GiftedChat } from "react-native-gifted-chat";
+import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { collection, getDocs, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Screen2 = ({ route, navigation, db }) => {
+const Screen2 = ({ route, navigation, db, isConnected }) => {
   //Name and background color being passed from screen 1.
   const { name, bgColor, userID } = route.params;
 
@@ -31,37 +32,70 @@ const Screen2 = ({ route, navigation, db }) => {
     />
   }
 
+  let unsubMessages;
+
   useEffect(() => {
-    // Moving user name and bg color from Screen1
+    // Importing user name and bg color from Screen1
     navigation.setOptions ({
       title: name, 
       style: {backgroundColor: bgColor},
     });
 
-    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+    // Checking if network connection
+    if (isConnected === true) {
+      // Unregister current onSnapshot listener to avoid registering multiple listeners when UseEffect is re-executed
+      if (unsubMessages) unsubMessages();
+      unsubMessages= null;
 
-    //onSnapshot listener
-    const unsubMessages = onSnapshot(q, (docs) => {
-      let newMessages = [];
-      docs.forEach(doc => {
-        newMessages.push({ 
-          id: doc.id, 
-          ...doc.data(),
-          createdAt: new Date(doc.data().createdAt.toMillis())
-        })
+      const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+
+      //onSnapshot listener
+      unsubMessages = onSnapshot(q, (docs) => {
+        let newMessages = [];
+        docs.forEach(doc => {
+          newMessages.push({ 
+            id: doc.id, 
+            ...doc.data(),
+            createdAt: new Date(doc.data().createdAt.toMillis())
+          })
+        });
+        cacheMessages(newMessages)
+        setMessages(newMessages);
       });
-      setMessages(newMessages);
-    })
+    } else loadCachedMessages();
+
     return () => {
       if (unsubMessages) unsubMessages();
     }
-  }, [navigation, name, bgColor]);
+  }, [isConnected, navigation, name, bgColor]);
+
+  // Cached Messages
+  const cacheMessages = async(messagesToCache) => {
+    try {
+      await AsyncStorage.setItem('messages', JSON.stringify(messagesToCache));
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  // Loading messages from cache if no network connection:
+  const loadCachedMessages = async () => {
+    const cachedMessages = await AsyncStorage.getItem("messages") || [];
+    setMessages(JSON.parse(cachedMessages));
+  }
+
+  // Enable/Disable InputToolbar based on connection
+  const renderInputToolbar = (props) => {
+    if (isConnected) return <InputToolbar {...props} />;
+    else return null;
+  }
 
   return (
     <View style={[styles.container, {backgroundColor: bgColor}]}>
       <GiftedChat
         messages={messages}
         renderBubble={renderBubble}
+        renderInputToolbar={renderInputToolbar}
         onSend={messages => onSend(messages)}
         user={{
           _id: userID,
