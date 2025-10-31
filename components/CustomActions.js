@@ -7,12 +7,14 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, storage }) => {
   const actionSheet = useActionSheet();
 
+  // Generating reference for image call
   const generateReference = (uri) => {
     const timeStamp = (new Date()).getTime();
     const imageName = uri.split("/")[uri.split("/").length -1];
     return `${userID}-${timeStamp}-${imageName}`;
   }
 
+  // Get and Send location
   const getLocation = async () => {
     console.log("onSend type inside CustomActions:", typeof onSend)
     let permissions = await Location.requestForegroundPermissionsAsync();
@@ -33,6 +35,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
     } else Alert.alert("Permissions haven't been granted.");
   }
 
+  // Handling uploading and sending of images
   const uploadAndSendImage = async (imageURI) => {
     const uniqueRefString = generateReference(imageURI);
     const newUploadRef = ref(storage, uniqueRefString);
@@ -50,6 +53,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
     });
   }
 
+  // Handling selecting an image to send from library.
   const pickImage = async () => {
     let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissions?.granted) {
@@ -59,6 +63,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
     }
   }
 
+  // Handling taking a photo to send
   const takePhoto = async () => {
     let permissions = await ImagePicker.requestCameraPermissionsAsync();
     if (permissions?.granted) {
@@ -68,6 +73,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
     }
   }
 
+  // Handling custom action menu
   const onActionPress = () => {
     const options = ['Choose From Library', 'Take Picture', 'Send Location', 'Cancel'];
     const cancelButtonIndex = options.length -1;
