@@ -23,7 +23,7 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
           _id: Date.now().toString(),
           createdAt: new Date(),
           text: '',
-          user,
+          user: user,
           location: {
             longitude: location.coords.longitude,
             latitude: location.coords.latitude,
@@ -40,7 +40,13 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
     const blob = await response.blob();
     uploadBytes(newUploadRef, blob).then(async (snapshot) => {
       const imageURL = await getDownloadURL(snapshot.ref)
-      onSend({ image: imageURL })
+      onSend([{ 
+        _id: Date.now().toString(),
+        createdAt: new Date(),
+        text: '',
+        user,
+        image: imageURL 
+      }])
     });
   }
 
@@ -73,16 +79,16 @@ const CustomActions = ({ wrapperStyle, iconTextStyle, onSend, userID, user, stor
       async (buttonIndex) => {
         switch (buttonIndex) {
           case 0:
-            pickImage();
+            await pickImage();
             console.log('user wants to pick an image');
             return;
           case 1:
-            takePhoto();
+            await takePhoto();
             console.log('user wants to take a photo');
             return;
           case 2:
+            await getLocation();
             console.log('user wants to get their location');
-            getLocation();
             return;
           default:
         }

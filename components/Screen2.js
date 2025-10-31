@@ -15,7 +15,7 @@ const Screen2 = ({ route, navigation, db, isConnected, storage }) => {
   const [messages, setMessages] = useState([]);
 
   //Message send function
-  const onSend = (newMessages =[]) => {
+  const onSend = (newMessages) => {
     console.log('onSend called with: ', newMessages);
     addDoc(collection(db, "messages"), newMessages[0])
   };
