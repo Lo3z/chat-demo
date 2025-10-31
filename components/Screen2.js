@@ -4,8 +4,10 @@ import { Bubble, GiftedChat, InputToolbar } from "react-native-gifted-chat";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { collection, getDocs, addDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomActions from './CustomActions';
+import MapView, { Marker }  from 'react-native-maps';
 
-const Screen2 = ({ route, navigation, db, isConnected }) => {
+const Screen2 = ({ route, navigation, db, isConnected, storage }) => {
   //Name and background color being passed from screen 1.
   const { name, bgColor, userID } = route.params;
 
@@ -13,7 +15,8 @@ const Screen2 = ({ route, navigation, db, isConnected }) => {
   const [messages, setMessages] = useState([]);
 
   //Message send function
-  const onSend = (newMessages) => {
+  const onSend = (newMessages =[]) => {
+    console.log('onSend called with: ', newMessages);
     addDoc(collection(db, "messages"), newMessages[0])
   };
 
@@ -90,6 +93,37 @@ const Screen2 = ({ route, navigation, db, isConnected }) => {
     else return null;
   }
 
+  // Location data custom view
+  const renderCustomView = (props) => {
+    const {currentMessage} = props;
+    if(currentMessage.location) {
+      return (
+        <MapView
+          style={{
+            width: 150,
+            height: 100,
+            borderRadius: 13,
+            margin: 3
+          }}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          <Marker 
+            coordinate={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+            }}
+          />
+        </MapView>
+      );
+    }
+    return null;
+  }
+
   return (
     <View style={[styles.container, {backgroundColor: bgColor}]}>
       <GiftedChat
@@ -97,6 +131,18 @@ const Screen2 = ({ route, navigation, db, isConnected }) => {
         renderBubble={renderBubble}
         renderInputToolbar={renderInputToolbar}
         onSend={messages => onSend(messages)}
+        renderActions={(props) => (
+          <CustomActions
+            {...props}
+            onSend={onSend}
+            storage={storage}
+            user={{
+              _id: userID,
+              name: name,
+            }}
+          />
+        )}
+        renderCustomView={renderCustomView}
         user={{
           _id: userID,
           name: name,
